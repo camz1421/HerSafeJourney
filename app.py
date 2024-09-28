@@ -17,9 +17,9 @@ def report_feedback(concert):
 def popular_events(city):
 	return f"Here is the list of the popular events in {city}"
 
-@app.route('/events/<city>')
-def get_events(city):
-    return f"Showing events for {city}"
+@app.route('/attended_events')
+def attended_events(attended):
+    return f"Showing events you have attended so far: {attended}"
 
 @app.route('/subscribe/<city>')
 def subscribe(city):
