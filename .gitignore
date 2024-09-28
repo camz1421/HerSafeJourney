@@ -3,6 +3,7 @@ venv/
 
 # Ignore MacOS system files
 .DS_Store
+.env
 
 # Ignore other unnecessary files
 __pycache__/
