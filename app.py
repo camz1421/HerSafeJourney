@@ -1,10 +1,12 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
-from flask import Flask, request
+import json  # <-- Make sure this is added to the top of your file
+from flask import Flask, request, jsonify
 import os
 from dotenv import load_dotenv
 import requests
 import threading
+
 
 # Create the Flask app
 app = Flask(__name__)
@@ -28,10 +30,46 @@ attended_events = {}
 def home():
     return 'Hello girlies! Welcome to Her Safe Journey! A Women Safe Event Finder Bot!'
 
-# User feedback on attended concerts
-@app.route('/feedback/<concert>')
+def initialize_feedback_file():
+    feedback_file = 'feedback.json'
+    if not os.path.exists(feedback_file):
+        with open(feedback_file, 'w') as f:
+            json.dump([], f)  # Create an empty list in the JSON file
+
+# Call the function to ensure the JSON file exists when the app starts
+initialize_feedback_file()
+
+@app.route('/feedback/<concert>', methods=['POST'])
 def report_feedback(concert):
-    return f"These are the concerts you have been to: {concert}. Please enter your rating for {concert} from 1 to 5."
+    # Get JSON data from the request body
+    feedback_data = request.get_json()  # Change this to request.get_json()
+
+    # Ensure feedback_data is not None (in case of an invalid JSON request)
+    if not feedback_data:
+        return jsonify({"error": "Invalid JSON data"}), 400
+
+    feedback_entry = {
+        "concert": concert,
+        "user_id": feedback_data.get("user_id"),
+        "rating": feedback_data.get("rating"),
+        "comments": feedback_data.get("comments"),
+        "date_submitted": feedback_data.get("date_submitted")
+    }
+
+    feedback_file = 'feedback.json'
+
+    # Load existing feedback
+    with open(feedback_file, 'r') as f:
+        feedback_list = json.load(f)
+
+    # Append new feedback
+    feedback_list.append(feedback_entry)
+
+    # Save the updated feedback list
+    with open(feedback_file, 'w') as f:
+        json.dump(feedback_list, f, indent=4)
+
+    return jsonify({"message": "Feedback submitted successfully", "concert": concert}), 201
 
 # Rating of an event (simplified as an example)
 @app.route('/rating/<event>')
